@@ -1,0 +1,12 @@
+<p>
+In this task, you will see two images on each trial. The first image will be a face, and the second image will be an object. The face is not important, but only signals that the object is about to appear. When the object appears, it is your job to identify it as a gun or a non-gun. If the object is a gun, press the "i" key. If the object is something else (a tool), press the "e" key.
+</p>
+<p>
+Do your best to classify every object correctly! We want you to respond as quickly as you can, but <b>ABOVE ALL ELSE, TRY TO BE ACCURATE!</b>
+</p>
+<p>
+If you get the answer wrong or take too long, you will have to press the spacebar to continue. But if you get the answer right, you will automatically start the next trial. This might feel fast at first, but keep paying attention! It will get easier.
+</p>
+<p>
+If you are ready, place your fingers on the "e" and "i" keys, and press the space bar to begin.
+</p>
