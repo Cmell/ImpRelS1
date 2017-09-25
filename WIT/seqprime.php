@@ -23,13 +23,13 @@ session_start();
 </body>
 <script>
   // Define vars
-  var seed, pid, taskTimeline;
+  var seed, pid, condition, taskTimeline;
   var leftKeyCode, rightKeyCode, correct_answer, target1KeyCode, target2KeyCode;
   var mask, redX, check, expPrompt;
   var instr1, instructStim, countdown, countdownNumbers;
   var timeline = [];
   var numTrials = 80;
-  var timing_parameters = [200, 200, 200, 500];
+  var timing_parameters = [200, 200, 200, 800];
   var primeSize = [240, 336];
   var targetSize = [380, 380]
 
@@ -46,9 +46,16 @@ session_start();
 
   // get the pid:
   <?php
+  // Grab the condition
+  if (mt_rand(0,1)) {
+    $condition = 'HighVar';
+  } else {
+    $condition = 'LowVar';
+  }
   // Get the pid:
-  $pid = getNewPID("../Resources/PID.csv");
+  $pid = getNewPID("../Resources/PID.csv", Array($condition));
   echo "pid = ".$pid.";";
+  echo "condition = '".$condition."';";
   ?>
 
   d = new Date();
@@ -64,6 +71,7 @@ session_start();
 
   var fields = [
     "pid",
+    "condition",
     "target1_key",
     "target2_key",
     "internal_node_id",
@@ -101,6 +109,7 @@ session_start();
   jsPsych.data.addProperties({
     pid: pid,
     seed: seed,
+    condition: condition,
     target1_key: target1Key,
     target2_key: target2Key,
     left_target: leftTarget,
@@ -164,41 +173,6 @@ session_start();
     line += '\r\n';
     return(line);
   };
-
-/*
-  var sendData = function (dataToSend) {
-    // AJAX stuff to actually send data. The script saves in append mode now.
-    $.ajax({
-  		type: 'POST',
-  		cache: false,
-  		url: '../Resources/SaveData.php',
-      error: onSaveError,
-      success: onSaveSuccess,
-  		data: {
-  			filename: filename,
-  			filedata: dataToSend
-  		}
-  	});
-  };
-
-  var onSaveSuccess = function (data, textStatus, jqXHR) {
-    saveSuccessCode = 0;
-    numSaveAttempts++;
-  };
-
-  var onSaveError = function (data, textStatus, jqXHR) {
-    console.log(textStatus);
-    if (numSaveAttempts < maxSaveAttempts) {
-      sendData();
-      numSaveAttempts++;
-      console.log(textStatus);
-    } else {
-      saveSuccessCode = 1;
-      console.log(textStatus);
-      console.log('Maximum number of save attempts exceeded.')
-    }
-  };
-  */
 
   // Initialize the data file
   sendHeader();
@@ -269,12 +243,16 @@ session_start();
   // Load stimulus lists
 
   // primes:
-  prime1Fls = <?php echo json_encode(glob("../Resources/Black/*.png")); ?>;
-  prime2Fls = <?php echo json_encode(glob("../Resources/White/*.png")); ?>;
+  prime1Fls = <?php
+    echo json_encode(glob("../Resources/".$condition."/Black/*.jpg"));
+    ?>;
+  prime2Fls = <?php
+    echo json_encode(glob("../Resources/".$condition."/White/*.jpg"));
+    ?>;
 
   // targets:
-  target1Fls = <?php echo json_encode(glob('../Resources/GrayGuns/*.png')); ?>;
-  target2Fls = <?php echo json_encode(glob('../Resources/GrayNonguns/*.png')); ?>;
+  target1Fls = <?php echo json_encode(glob('../Resources/guns/*.png')); ?>;
+  target2Fls = <?php echo json_encode(glob('../Resources/nonguns/*.png')); ?>;
   // TODO: Change the background of the target objects to alpha channel
 
   // Put the stimuli in lists with the relevant information.
@@ -401,7 +379,7 @@ session_start();
   timeline.push(thankyouTrial);
 
   // try to set the background-color
-  document.body.style.backgroundColor = '#d9d9d9';
+  document.body.style.backgroundColor = '#ffffff';
 
   // Preload all stimuli
   var allTargets = target1Fls.concat(target2Fls);
