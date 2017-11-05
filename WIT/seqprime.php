@@ -205,7 +205,7 @@ session_start();
   // Load instruction strings
   if (target1KeyCode == 69) {
     instr1 = <?php
-    $flName = "./Texts/InstructionsScreen1e-gun.txt";
+    $flName = "./Texts/InstructionsScreen1e-good.txt";
     $myfile = fopen($flName, "r") or die("Unable to open file!");
     echo json_encode(fread($myfile,filesize($flName)));
     fclose($myfile);
@@ -213,7 +213,7 @@ session_start();
 
   } else {
     instr1 = <?php
-    $flName = "./Texts/InstructionsScreen1e-nogun.txt";
+    $flName = "./Texts/InstructionsScreen1i-good.txt";
     $myfile = fopen($flName, "r") or die("Unable to open file!");
     echo json_encode(fread($myfile,filesize($flName)));
     fclose($myfile);
