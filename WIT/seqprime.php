@@ -29,7 +29,7 @@ session_start();
   var instr1, instructStim, countdown, countdownNumbers;
   var timeline = [];
   var numTrials = 80;
-  var timing_parameters = [200, 200, 200, 800];
+  var timing_parameters = [200, 200, 200, 1300];
   var primeSize = [240, 336];
   var targetSize = [380, 380]
 
@@ -39,10 +39,32 @@ session_start();
   // trial.
 
   // Key parameters:
-  prime1Label = "Black";
-  prime2Label = "White";
-  target1Label = "Gun";
-  target2Label = "Non-Gun";
+  var prime1Label = "Black";
+  var prime2Label = "White";
+  var target1Label = "good";
+  var target2Label = "bad";
+
+  // Load files
+
+  // primes:
+
+  var prime1Fls = <?php
+    // For now, set the condition to use the primes I want.
+    $condition = 'LowVar';
+    echo json_encode(glob("../Resources/".$condition."/Black/*.jpg"));
+    ?>;
+  var prime2Fls = <?php
+    echo json_encode(glob("../Resources/".$condition."/White/*.jpg"));
+    ?>;
+
+
+  // targets:
+  // target1Fls = <?php echo json_encode(glob('../Resources/guns/*.png')); ?>;
+  // target2Fls = <?php echo json_encode(glob('../Resources/nonguns/*.png')); ?>;
+  // TODO: Change the background of the target objects to alpha channel
+
+  var target1Fls = <?php echo json_encode(getWords('../Resources/good.csv')); ?>;
+  var target2Fls = <?php echo json_encode(getWords('../Resources/bad.csv')); ?>;
 
   // get the pid:
   <?php
@@ -82,6 +104,8 @@ session_start();
     "trial_index",
     "trial_type",
     "trial_num",
+    "word",
+    "word_type",
     "target_id",
     "target_type",
     "prime_type",
@@ -95,7 +119,7 @@ session_start();
   // Choose keys:
   leftKey = "e";
   rightKey = "i";
-  leftTarget = rndSelect([target1Label, target2Label], 1);
+  leftTarget = rndSelect([target1Label, target2Label], 1)[0];
   rightTarget = leftTarget == target1Label ? target2Label : target1Label;
   target1Key = rightTarget == target1Label ? rightKey : leftKey;
   target2Key = rightTarget == target2Label ? rightKey : leftKey;
@@ -103,6 +127,7 @@ session_start();
   rightKeyCode = jsPsych.pluginAPI.convertKeyCharacterToKeyCode(rightKey);
   target1KeyCode = jsPsych.pluginAPI.convertKeyCharacterToKeyCode(target1Key);
   target2KeyCode = jsPsych.pluginAPI.convertKeyCharacterToKeyCode(target2Key);
+  debugger;
 
   // Append pid and condition information to all trials, including my
   // trialNum tracking variable (dynamically updated).
@@ -242,19 +267,6 @@ session_start();
 
   // Load stimulus lists
 
-  // primes:
-  prime1Fls = <?php
-    echo json_encode(glob("../Resources/".$condition."/Black/*.jpg"));
-    ?>;
-  prime2Fls = <?php
-    echo json_encode(glob("../Resources/".$condition."/White/*.jpg"));
-    ?>;
-
-  // targets:
-  target1Fls = <?php echo json_encode(glob('../Resources/guns/*.png')); ?>;
-  target2Fls = <?php echo json_encode(glob('../Resources/nonguns/*.png')); ?>;
-  // TODO: Change the background of the target objects to alpha channel
-
   // Put the stimuli in lists with the relevant information.
 
   var makeStimObjs = function (fls, condVar, condValue) {
@@ -273,24 +285,21 @@ session_start();
     return(tempLst);
   };
 
-  /*
-  // Don't need this one right now because everything is images.
-  var makeWordObjs = function (words, condValue) {
+  var makeWordObjs = function (words, condVar, condValue) {
     var tempLst = [];
     var tempObj;
     for (i=0; i<words.length; i++) {
       var w = words[i];
       var htmlStr = '<h2 style="text-align:center;font-size:90px;margin:0;">' + w + '</h2>';
       tempObj = {
-        valence: condValue,
         word: w,
         html: htmlStr
       };
+      tempObj[condVar] = condValue;
       tempLst.push(tempObj);
     }
     return(tempLst);
   };
-  */
 
   // Add a "thank you trial"
   var thankyouTrial = {
@@ -301,15 +310,15 @@ session_start();
 
   var prime1Lst = makeStimObjs(prime1Fls, "prime_type", prime1Label);
   var prime2Lst = makeStimObjs(prime2Fls, "prime_type", prime2Label);
-  var target1Lst = makeStimObjs(target1Fls, "target_type", target1Label);
-  var target2Lst = makeStimObjs(target2Fls, "target_type", target2Label);
+  var target1Lst = makeWordObjs(target1Fls, "word_type", target1Label);
+  var target2Lst = makeWordObjs(target2Fls, "word_type", target2Label);
 
   mask = "MaskReal.png";
   fixCross = "FixationCross380x380.png";
   redX = "XwithSpacebarMsg.png";
   check = "CheckReal.png";
   tooSlow = "TooSlow.png";
-  blank = "Blank.png"
+  blank = "Blank.png";
 
   // utility sum function
   var sum = function (a, b) {
@@ -337,7 +346,7 @@ session_start();
     choices: [leftKeyCode, rightKeyCode],
     prompt: expPrompt,
     timing_stim: timing_parameters,
-    is_html: [false,false,false,false],
+    is_html: [false,false,true,false],
     response_ends_trial: true,
     timeline: [],
     timing_response: timing_parameters[2] + timing_parameters[3],
@@ -354,14 +363,14 @@ session_start();
   };
 
   for (i=0; i<numTrials; i++){
-    correct_answer = targets[i].target_type == target1Label ? target1KeyCode : target2KeyCode;
+    correct_answer = targets[i].word_type == target1Label ? target1KeyCode : target2KeyCode;
     tempTrial = {
-      stimuli: [fixCross, primes[i].file, targets[i].file, mask],
+      stimuli: [fixCross, primes[i].file, targets[i].html, mask],
       data: {
         prime_cat: primes[i].prime_type,
-        target_type: targets[i].target_type,
+        target_type: targets[i].word_type,
         prime_id: primes[i].stId,
-        target_id: targets[i].stId,
+        word: targets[i].word,
         trial_num: i + 1
       },
       correct_choice: correct_answer
@@ -403,7 +412,7 @@ session_start();
   var startExperiment = function () {
     jsPsych.init({
     	timeline: timeline,
-      fullscreen: true
+      fullscreen: false
     });
   };
   startExperiment();
