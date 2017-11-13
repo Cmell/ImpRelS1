@@ -1,0 +1,7 @@
+Resources/data/*
+*png
+*.jpg
+Resources/PID.csv
+Resources/good10.csv
+Resources/guns/*
+Resources/nonguns/*
