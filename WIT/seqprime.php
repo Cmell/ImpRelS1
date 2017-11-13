@@ -66,6 +66,9 @@ session_start();
   var target1Fls = <?php echo json_encode(getWords('../Resources/good.csv')); ?>;
   var target2Fls = <?php echo json_encode(getWords('../Resources/bad.csv')); ?>;
 
+  var allTargets = target1Fls.concat(target2Fls);
+  var allPrimes = prime1Fls.concat(prime2Fls);
+
   // get the pid:
   <?php
   // Grab the condition
@@ -104,12 +107,11 @@ session_start();
     "trial_index",
     "trial_type",
     "trial_num",
-    "word",
-    "word_type",
     "target_id",
     "target_type",
     "prime_type",
     "prime_id",
+    "replication",
     "rt",
     "time_elapsed",
     "rt_from_start",
@@ -127,7 +129,6 @@ session_start();
   rightKeyCode = jsPsych.pluginAPI.convertKeyCharacterToKeyCode(rightKey);
   target1KeyCode = jsPsych.pluginAPI.convertKeyCharacterToKeyCode(target1Key);
   target2KeyCode = jsPsych.pluginAPI.convertKeyCharacterToKeyCode(target2Key);
-  debugger;
 
   // Append pid and condition information to all trials, including my
   // trialNum tracking variable (dynamically updated).
@@ -325,10 +326,37 @@ session_start();
     return a + b;
   };
 
-  // Recycle each list to the length of each trial subset. Then shuffle each
-  // subset list's primes. Then, pairs are randomized, and trials can be
-  // randomized later.
+  //  Each person should see each combination of prime and target twice.
 
+  // Combinations:
+  var allPrimeLst = prime1Lst.concat(prime2Lst);
+  var allTargetLst = target1Lst.concat(target2Lst);
+  var combos = [];
+  for (var i = 0; i < allPrimeLst.length; i++) {
+    for (var a=0; a < allTargetLst.length; a++) {
+      var curP = allPrimeLst[i];
+      var curT = allTargetLst[a];
+      combos.push({
+        prime: curP,
+        target: curT
+      });
+    }
+  }
+
+  // Twice, assigning set A and set B:
+  var combos2 = jQuery.extend(true, [], combos);
+  combos = combos.concat(combos2);
+  for (var i=0; i < combos.length; i++) {
+    var rep = '';
+    if (i < combos.length / 2) {
+      rep = 'A';
+    } else if (i >= combos.length / 2) {
+      rep = 'B';
+    }
+    combos[i].replication = rep;
+  }
+
+  /*
   var rndmTarget1 = randomRecycle(target1Lst, numTrials/2);
   var rndmTarget2 = randomRecycle(target2Lst, numTrials/2);
   var rndmPrime1 = shuffle(randomRecycle(prime1Lst, numTrials/2));
@@ -339,6 +367,7 @@ session_start();
     rndmPrime1.slice(rndmPrime1.length/2, rndmPrime1.length),
     rndmPrime2.slice(rndmPrime2.length/2, rndmPrime2.length)
   );
+  */
 
   // Make all the trials and timelines.
   taskTrials = {
@@ -362,23 +391,31 @@ session_start();
     on_finish: endTrial
   };
 
-  for (i=0; i<numTrials; i++){
-    correct_answer = targets[i].word_type == target1Label ? target1KeyCode : target2KeyCode;
+  // Randomize trial order here:
+  combos = shuffle(combos);
+
+  for (i=0; i<combos.length; i++){
+    var curTrial = combos[i];
+    var curPrime = curTrial.prime;
+    var curTarget = curTrial.target;
+    //correct_answer = targets[i].word_type == target1Label ? target1KeyCode : target2KeyCode;
+    correct_answer = curTarget.word_type == target1Label ? target1KeyCode : target2KeyCode;
     tempTrial = {
-      stimuli: [fixCross, primes[i].file, targets[i].html, mask],
+      //stimuli: [fixCross, primes[i].file, targets[i].html, mask],
+      stimuli: [fixCross, curPrime.file, curTarget.html, mask],
       data: {
-        prime_cat: primes[i].prime_type,
-        target_type: targets[i].word_type,
-        prime_id: primes[i].stId,
-        word: targets[i].word,
+        prime_type: curPrime.prime_type,
+        target_type: curTarget.word_type,
+        prime_id: curPrime.stId,
+        target_id: curTarget.word,
+        replication: curTrial.replication,
         trial_num: i + 1
       },
       correct_choice: correct_answer
     };
     taskTrials.timeline.push(tempTrial);
   }
-  // Randomize trial order here:
-  taskTrials.timeline = shuffle(taskTrials.timeline);
+
 
   // Push everything to the big timeline in order
   timeline.push(instructStim);
@@ -391,8 +428,6 @@ session_start();
   document.body.style.backgroundColor = '#ffffff';
 
   // Preload all stimuli
-  var allTargets = target1Fls.concat(target2Fls);
-  var allPrimes = prime1Fls.concat(prime2Fls);
   var imgNamesSizes = [];
   for (var i = 0; i < allPrimes.length; i++) {
     imgNamesSizes[i] = [allPrimes[i], primeSize];
