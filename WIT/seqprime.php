@@ -7,6 +7,7 @@ session_start();
 <!doctype html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Experiment</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.min.js"></script>
