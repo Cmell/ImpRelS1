@@ -1,5 +1,5 @@
 <p>
-In this task, you will see two images on each trial. The first image will be a face, and the second image will be an word. The face is not important, but only signals that the word is about to appear. When the word appears, it is your job to identify it as a good word or a bad word. If the word is a good, press the "i" key. If the word is bad, press the "e" key.
+In this task, you will see two images on each trial. The first image will be a face, and the second image will be a word. The face is not important, but only signals that the word is about to appear. When the word appears, it is your job to identify it as a good word or a bad word. If the word is a good, press the "i" key. If the word is bad, press the "e" key.
 </p>
 <p>
 Do your best to classify every word correctly! We want you to respond as quickly as you can, but <b>ABOVE ALL ELSE, TRY TO BE ACCURATE!</b>

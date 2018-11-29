@@ -13,6 +13,7 @@ session_start();
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.min.js"></script>
 	<script src="../Resources/jspsych-5.0.3/jspsych.js"></script>
   <script src="../Resources/jspsych-5.0.3/plugins/jspsych-sequential-priming.js"></script>
+  <script src="../Resources/jspsych-5.0.3/plugins/jspsych-html.js"></script>
   <script src="../Resources/jspsych-5.0.3/plugins/jspsych-text.js"></script>
   <script src="../Resources/jspsych-5.0.3/plugins/jspsych-call-function.js"></script>
   <script src="https://cdn.rawgit.com/Cmell/JavascriptUtilsV9-20-2017/master/Util.js"></script>
@@ -30,12 +31,12 @@ session_start();
   var instr1, instructStim, countdown, countdownNumbers;
   var timeline = [];
   var numTrials = 80;
-  var timing_parameters = [200, 200, 200, 1300];
+  var timing_parameters = [200, 200, 500, 1300];
   var primeSize = [240, 336];
   var targetSize = [380, 380]
 
   // The timing_parameters should correspond to the planned set of stimuli.
-  // In this case, I'm leading with a mask (following Ito et al.), and then
+  // In this case, I'm leading with a mask, and then
   // the prime, and then the stimulus, and then the mask until the end of the
   // trial.
 
@@ -44,31 +45,6 @@ session_start();
   var prime2Label = "White";
   var target1Label = "good";
   var target2Label = "bad";
-
-  // Load files
-
-  // primes:
-
-  var prime1Fls = <?php
-    // For now, set the condition to use the primes I want.
-    $condition = 'LowVar';
-    echo json_encode(glob("../Resources/".$condition."/Black/*.jpg"));
-    ?>;
-  var prime2Fls = <?php
-    echo json_encode(glob("../Resources/".$condition."/White/*.jpg"));
-    ?>;
-
-
-  // targets:
-  // target1Fls = <?php echo json_encode(glob('../Resources/guns/*.png')); ?>;
-  // target2Fls = <?php echo json_encode(glob('../Resources/nonguns/*.png')); ?>;
-  // TODO: Change the background of the target objects to alpha channel
-
-  var target1Fls = <?php echo json_encode(getWords('../Resources/good.csv')); ?>;
-  var target2Fls = <?php echo json_encode(getWords('../Resources/bad.csv')); ?>;
-
-  var allTargets = target1Fls.concat(target2Fls);
-  var allPrimes = prime1Fls.concat(prime2Fls);
 
   // get the pid:
   <?php
@@ -83,6 +59,25 @@ session_start();
   echo "pid = ".$pid.";";
   echo "condition = '".$condition."';";
   ?>
+
+  // Load files
+
+  // primes:
+  var prime1Fls = <?php
+    echo json_encode(glob("../Resources/".$condition."/Black/*.jpg"));
+    ?>;
+  var prime2Fls = <?php
+    echo json_encode(glob("../Resources/".$condition."/White/*.jpg"));
+    ?>;
+
+
+  // targets:
+
+  var target1Fls = <?php echo json_encode(getWords('../Resources/good.csv')); ?>;
+  var target2Fls = <?php echo json_encode(getWords('../Resources/bad.csv')); ?>;
+
+  var allTargets = target1Fls.concat(target2Fls);
+  var allPrimes = prime1Fls.concat(prime2Fls);
 
   d = new Date();
   seed = d.getTime();
@@ -253,7 +248,7 @@ session_start();
     '<div id="jspsych-countdown-numbers">3</div>',
     '<div id="jspsych-countdown-numbers">2</div>',
     '<div id="jspsych-countdown-numbers">1</div>'
-  ]
+  ];
   countdown = {
     type: "sequential-priming",
     stimuli: countdownNumbers,
@@ -392,6 +387,30 @@ session_start();
     on_finish: endTrial
   };
 
+  feedbackTrials = {
+    type: "text",
+    cont_key: [32],
+    on_start: function (trl) {
+      var countRight = function (a, b) {
+        //debugger;
+        return(a + (b.correct=='true'));
+      };
+      // Get sequential priming trials and calculate accuracy
+      var d = jsPsych.data.getTrialsOfType('sequential-priming');
+      d = d.filter(function (thing) {return(typeof thing.correct != 'undefined')});
+      var nTrials = d.length;
+      var nCorrect = d.reduce(countRight, 0);
+      var accRate = Math.round(nCorrect / nTrials * 100, 0);
+
+      var txt = '<p>Your accuracy rate so far:</p><h2>' + accRate + '&#x25;\
+      </h2><p>\
+      Press the spacebar to continue.\
+      </p>';
+      debugger;
+      trl.text = txt;
+    }
+  };
+
   // Randomize trial order here:
   combos = shuffle(combos);
 
@@ -405,6 +424,8 @@ session_start();
       //stimuli: [fixCross, primes[i].file, targets[i].html, mask],
       stimuli: [fixCross, curPrime.file, curTarget.html, mask],
       data: {
+        task_trial: 'yes', // This can be used to distinguish task trials
+        // from other sequential priming trials.
         prime_type: curPrime.prime_type,
         target_type: curTarget.word_type,
         prime_id: curPrime.stId,
@@ -414,6 +435,9 @@ session_start();
       },
       correct_choice: correct_answer
     };
+    if (i == 3) {
+      taskTrials.timeline.push(feedbackTrials);
+    }
     taskTrials.timeline.push(tempTrial);
   }
 
