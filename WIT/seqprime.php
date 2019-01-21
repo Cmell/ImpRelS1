@@ -46,8 +46,8 @@ session_start();
   // Key parameters:
   var prime1Label = "Black";
   var prime2Label = "White";
-  var target1Label = "good";
-  var target2Label = "bad";
+  var target1Label = "Gun";
+  var target2Label = "Tool";
 
   // get the pid:
   <?php
@@ -57,8 +57,12 @@ session_start();
   } else {
     $condition = 'LowVar';
   }
-  // Get the pid:
-  $pid = getNewPID("../Resources/PID.csv", Array($condition));
+  // Get the pid. If it is passed in, then use that value. Otherwise, generate:
+  if (isset($_GET['pid'])) {
+    $pid = $_GET['pid'];
+  } else {
+    $pid = getNewPID("../Resources/PID.csv", Array($condition));
+  }
   echo "pid = ".$pid.";";
   echo "condition = '".$condition."';";
   ?>
@@ -76,8 +80,10 @@ session_start();
 
   // targets:
 
-  var target1Fls = <?php echo json_encode(getWords('../Resources/good.csv')); ?>;
-  var target2Fls = <?php echo json_encode(getWords('../Resources/bad.csv')); ?>;
+  //var target1Fls = <?php echo json_encode(getWords('../Resources/good.csv')); ?>;
+  //var target2Fls = <?php echo json_encode(getWords('../Resources/bad.csv')); ?>;
+  var target1Fls = <?php echo json_encode(glob("../Resources/guns/*.png"));?>;
+  var target2Fls = <?php echo json_encode(glob("../Resources/nonguns/*.png"));?>;
 
   var allTargets = target1Fls.concat(target2Fls);
   var allPrimes = prime1Fls.concat(prime2Fls);
@@ -205,7 +211,7 @@ session_start();
   // Load instruction strings
   if (target1KeyCode == 69) {
     instr1 = <?php
-    $flName = "./Texts/InstructionsScreen1e-good.txt";
+    $flName = "./Texts/InstructionsScreen1e-gun.txt";
     $myfile = fopen($flName, "r") or die("Unable to open file!");
     echo json_encode(fread($myfile,filesize($flName)));
     fclose($myfile);
@@ -213,7 +219,7 @@ session_start();
 
   } else {
     instr1 = <?php
-    $flName = "./Texts/InstructionsScreen1i-good.txt";
+    $flName = "./Texts/InstructionsScreen1e-nogun.txt";
     $myfile = fopen($flName, "r") or die("Unable to open file!");
     echo json_encode(fread($myfile,filesize($flName)));
     fclose($myfile);
@@ -306,8 +312,8 @@ session_start();
 
   var prime1Lst = makeStimObjs(prime1Fls, "prime_type", prime1Label);
   var prime2Lst = makeStimObjs(prime2Fls, "prime_type", prime2Label);
-  var target1Lst = makeWordObjs(target1Fls, "word_type", target1Label);
-  var target2Lst = makeWordObjs(target2Fls, "word_type", target2Label);
+  var target1Lst = makeStimObjs(target1Fls, "target_type", target1Label);
+  var target2Lst = makeStimObjs(target2Fls, "target_type", target2Label);
 
   mask = "MaskReal.png";
   fixCross = "FixationCross380x380.png";
@@ -370,7 +376,7 @@ session_start();
     choices: [leftKeyCode, rightKeyCode],
     prompt: expPrompt,
     timing_stim: timing_parameters,
-    is_html: [false,false,true,false],
+    is_html: [false,false,false,false],
     response_ends_trial: true,
     timeline: [],
     timing_response: timing_parameters[2] + timing_parameters[3],
@@ -428,17 +434,17 @@ session_start();
     var curPrime = curTrial.prime;
     var curTarget = curTrial.target;
     //correct_answer = targets[i].word_type == target1Label ? target1KeyCode : target2KeyCode;
-    correct_answer = curTarget.word_type == target1Label ? target1KeyCode : target2KeyCode;
+    correct_answer = curTarget.target_type == target1Label ? target1KeyCode : target2KeyCode;
     tempTrial = {
       //stimuli: [fixCross, primes[i].file, targets[i].html, mask],
-      stimuli: [fixCross, curPrime.file, curTarget.html, mask],
+      stimuli: [fixCross, curPrime.file, curTarget.file, mask],
       data: {
         task_trial: 'yes', // This can be used to distinguish task trials
         // from other sequential priming trials.
         prime_type: curPrime.prime_type,
-        target_type: curTarget.word_type,
+        target_type: curTarget.target_type,
         prime_id: curPrime.stId,
-        target_id: curTarget.word,
+        target_id: curTarget.stId,
         replication: curTrial.replication,
         trial_num: i + 1
       },
