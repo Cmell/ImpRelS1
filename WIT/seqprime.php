@@ -11,14 +11,12 @@ session_start();
   <title>Experiment</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.min.js"></script>
-	<script src="../Resources/jspsych-5.0.3/jspsych.js"></script>
-  <script src="../Resources/jspsych-5.0.3/plugins/jspsych-sequential-priming.js"></script>
-  <script src="../Resources/jspsych-5.0.3/plugins/jspsych-html.js"></script>
-  <script src="../Resources/jspsych-5.0.3/plugins/jspsych-text.js"></script>
-  <script src="../Resources/jspsych-5.0.3/plugins/jspsych-call-function.js"></script>
+	<script src="../Resources/jspsych-6.0.5/jspsych.js"></script>
+  <script src="../Resources/jspsych-6.0.5/plugins/jspsych-sequential-priming.js"></script>
+  <script src="../Resources/jspsych-6.0.5/plugins/jspsych-instructions.js"></script>
   <script src="https://cdn.rawgit.com/Cmell/JavascriptUtilsV9-20-2017/master/Util.js"></script>
   <script src='../Resources/ModS3JSUtil.js'></script>
-	<link href="../Resources/jspsych-5.0.3/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+	<link href="../Resources/jspsych-6.0.5/css/jspsych.css" rel="stylesheet" type="text/css"></link>
 </head>
 <body>
 
@@ -30,7 +28,12 @@ session_start();
   var mask, redX, check, expPrompt;
   var instr1, instructStim, countdown, countdownNumbers;
   var timeline = [];
-  var numTrials = 80;
+  //var numTrials = 120;
+  /*
+  This task is constructed so that each person sees each combination of prime
+  and target twice. That yields 288 trials (12 primes by 12 targets yields 144
+  combinations; 144 * 2 = 288). 
+  */
   var timing_parameters = [200, 200, 500, 1300];
   var primeSize = [240, 336];
   var targetSize = [380, 380]
@@ -219,7 +222,7 @@ session_start();
   }
 
   // Make the expPrompt
-  expPrompt = '<table style="width:100%; text-align:center">'
+  expPrompt = '<table style="width:300px; text-align:center; margin:auto">'
   + '<tr"> \
   <th style="width:50%">"' +
   leftKey + '":' +
@@ -238,9 +241,9 @@ session_start();
 
   // Make the instruction stimulus.
   instructStim = {
-    type: "text",
-    text: instr1,
-    cont_key: [32]
+    type: "instructions",
+    pages: [instr1],
+    key_forward: 32
   };
 
   // Make a countdown sequence to begin the task
@@ -255,7 +258,7 @@ session_start();
     is_html: [true, true, true],
     choices: [],
     prompt: expPrompt,
-    timing: [1000, 1000, 1000],
+    timing_stim: [1000, 1000, 1000],
     response_ends_trial: false,
     feedback: false,
     timing_post_trial: 0,
@@ -299,11 +302,7 @@ session_start();
   };
 
   // Add a "thank you trial"
-  var thankyouTrial = {
-    type: "text",
-    text: 'Thank you! Please let the experimenter know you are finished.',
-    cont_key: [32]
-  };
+  // TODO: Forward people to a survey.
 
   var prime1Lst = makeStimObjs(prime1Fls, "prime_type", prime1Label);
   var prime2Lst = makeStimObjs(prime2Fls, "prime_type", prime2Label);
@@ -312,7 +311,7 @@ session_start();
 
   mask = "MaskReal.png";
   fixCross = "FixationCross380x380.png";
-  redX = "XwithSpacebarMsg.png";
+  redX = "XReal.png";
   check = "CheckReal.png";
   tooSlow = "TooSlow.png";
   blank = "Blank.png";
@@ -340,7 +339,7 @@ session_start();
   }
 
   // Twice, assigning set A and set B:
-  var combos2 = jQuery.extend(true, [], combos);
+  var combos2 = jQuery.extend(true, [], combos); // Copies the combos I think
   combos = combos.concat(combos2);
   for (var i=0; i < combos.length; i++) {
     var rep = '';
@@ -377,10 +376,11 @@ session_start();
     timing_response: timing_parameters[2] + timing_parameters[3],
     response_window: [timing_parameters[0] + timing_parameters[1], Infinity],
     feedback: true,
-    key_to_advance: 32,
-    //feedback_duration: 1000, // Only activate these if the check should show.
+    //key_to_advance: 32,
+    feedback_duration: 1000, // Only activate these if the check should show.
     //correct_feedback: check,
     incorrect_feedback: redX,
+    correct_feedback: 'AllAlpha.png',
     timeout_feedback: tooSlow,
     timing_post_trial: 0,
     iti: 800,
@@ -388,26 +388,36 @@ session_start();
   };
 
   feedbackTrials = {
-    type: "text",
-    cont_key: [32],
+    type: "instructions",
+    key_forward: 32,
+    allow_backward: false,
     on_start: function (trl) {
       var countRight = function (a, b) {
         //debugger;
         return(a + (b.correct=='true'));
       };
       // Get sequential priming trials and calculate accuracy
-      var d = jsPsych.data.getTrialsOfType('sequential-priming');
-      d = d.filter(function (thing) {return(typeof thing.correct != 'undefined')});
-      var nTrials = d.length;
-      var nCorrect = d.reduce(countRight, 0);
-      var accRate = Math.round(nCorrect / nTrials * 100, 0);
+      var d = jsPsych.data.get();
+
+      d = d.filterCustom(function (t) {
+        var TorF = t.trial_type == 'sequential-priming' && typeof t.target_id !== 'undefined';
+        return(TorF);
+      });
+      var cor = d.select('correct');
+      var rates = cor.frequencies();
+      var nTrials = d.count();
+      var nCorrect = rates['true'];
+      if (typeof nCorrect === 'undefined') {
+        nCorrect = 0;
+      }
+
+      accRate = Math.round(100 * nCorrect / nTrials);
 
       var txt = '<p>Your accuracy rate so far:</p><h2>' + accRate + '&#x25;\
       </h2><p>\
       Press the spacebar to continue.\
       </p>';
-      debugger;
-      trl.text = txt;
+      trl.pages = [txt];
     }
   };
 
@@ -435,11 +445,14 @@ session_start();
       },
       correct_choice: correct_answer
     };
+    /*
     if (i == 3) {
       taskTrials.timeline.push(feedbackTrials);
     }
+    */
     taskTrials.timeline.push(tempTrial);
   }
+  debugger;
 
 
   // Push everything to the big timeline in order
@@ -447,32 +460,39 @@ session_start();
   timeline.push(countdown);
   timeline.push(taskTrials);
   //timeline.push(saveCall);
-  timeline.push(thankyouTrial);
+  //timeline.push(thankyouTrial);
 
   // try to set the background-color
   document.body.style.backgroundColor = '#ffffff';
 
-  // Preload all stimuli
+  // Preload all images manually
   var imgNamesSizes = [];
   for (var i = 0; i < allPrimes.length; i++) {
     imgNamesSizes[i] = [allPrimes[i], primeSize];
   }
-  var tempLength = imgNamesSizes.length;
-  for (var i = 0; i < allTargets.length; i++) {
-    imgNamesSizes[i + tempLength] = [allTargets[i], targetSize];
-  }
+
   imgNamesSizes = imgNamesSizes.concat([ //imgNamesArr = imgNamesArr.concat([
     ['./TooSlow.png', [201, 380]],
-    ['./XwithSpacebarMsg.png', [285, 380]],
+    ['./AllAlpha.pn', [380, 380]],
+    ['./XReal.png', [272, 380]],
     ['./MaskReal.png', targetSize],
     ['./FixationCross380x380.png', targetSize]
   ]);
-  window.allWITImages = preloadResizedImages(imgNamesSizes);
+  var preLoadArray = allPrimes.concat([
+    './TooSlow.png',
+    './AllAlpha.png',
+    './XReal.png',
+    './MaskReal.png',
+    './FixationCross380x380.png'
+  ]);
+
+  //window.allWITImages = preloadResizedImages(imgNamesSizes);
 
   var startExperiment = function () {
     jsPsych.init({
     	timeline: timeline,
-      fullscreen: false
+      fullscreen: false,
+      preload_images: preLoadArray
     });
   };
   startExperiment();
