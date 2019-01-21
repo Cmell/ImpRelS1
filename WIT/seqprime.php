@@ -32,7 +32,7 @@ session_start();
   /*
   This task is constructed so that each person sees each combination of prime
   and target twice. That yields 288 trials (12 primes by 12 targets yields 144
-  combinations; 144 * 2 = 288). 
+  combinations; 144 * 2 = 288).
   */
   var timing_parameters = [200, 200, 500, 1300];
   var primeSize = [240, 336];
@@ -393,7 +393,6 @@ session_start();
     allow_backward: false,
     on_start: function (trl) {
       var countRight = function (a, b) {
-        //debugger;
         return(a + (b.correct=='true'));
       };
       // Get sequential priming trials and calculate accuracy
@@ -452,8 +451,6 @@ session_start();
     */
     taskTrials.timeline.push(tempTrial);
   }
-  debugger;
-
 
   // Push everything to the big timeline in order
   timeline.push(instructStim);
