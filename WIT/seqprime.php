@@ -34,7 +34,7 @@ session_start();
   and target twice. That yields 288 trials (12 primes by 12 targets yields 144
   combinations; 144 * 2 = 288).
   */
-  var timing_parameters = [200, 200, 500, 1300];
+  var timing_parameters = [200, 200, 500, 800];
   var primeSize = [240, 336];
   var targetSize = [380, 380]
 
