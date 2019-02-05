@@ -491,11 +491,18 @@ session_start();
 
   //window.allWITImages = preloadResizedImages(imgNamesSizes);
 
+  var experimentEnd = function () {
+    var url = "https://cuboulder.qualtrics.com/jfe/form/SV_5BTA5TyflLgigdf?pid=" +
+      pid;
+    window.location = url;
+  }
+
   var startExperiment = function () {
     jsPsych.init({
     	timeline: timeline,
-      fullscreen: false,
-      preload_images: preLoadArray
+      fullscreen: true,
+      preload_images: preLoadArray,
+      on_finish: experimentEnd
     });
   };
   startExperiment();
