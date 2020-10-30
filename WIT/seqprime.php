@@ -492,8 +492,8 @@ session_start();
   //window.allWITImages = preloadResizedImages(imgNamesSizes);
 
   var experimentEnd = function () {
-    var url = "https://cuboulder.qualtrics.com/jfe/form/SV_5BTA5TyflLgigdf?pid=" +
-      pid;
+    var url = "https://ucboulder.sona-systems.com/webstudy_credit.aspx?experiment_id=2035&credit_token=0088a4c6aa9145978279bb1061a0a44d&survey_code=" +
+      <?php echo $_GET['sonacode'];>;
     window.location = url;
   }
 
