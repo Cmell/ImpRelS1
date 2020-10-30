@@ -6,3 +6,6 @@ Resources/good10.csv
 Resources/guns/*
 Resources/nonguns/*
 *.xcf
+Resources/.DS_Store
+Resources/HighVar/*
+Resources/LowVar/*
