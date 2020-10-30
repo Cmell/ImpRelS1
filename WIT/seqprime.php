@@ -493,7 +493,7 @@ session_start();
 
   var experimentEnd = function () {
     var url = "https://ucboulder.sona-systems.com/webstudy_credit.aspx?experiment_id=2035&credit_token=0088a4c6aa9145978279bb1061a0a44d&survey_code=" +
-      <?php echo $_GET['sonacode'];>;
+      <?php echo $_GET['sonacode'];?>;
     window.location = url;
   }
 
