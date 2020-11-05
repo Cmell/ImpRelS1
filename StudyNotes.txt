@@ -1,0 +1,1 @@
+There is bogus data from testing prior to 2020-11-04 5:30 PM. Exclude any responses ending before that.
